@@ -19,47 +19,58 @@ function deploy_stack() {
 	return 0
 }
 
-function push_docker_image_service() {
+function push_to_docker_registry() {
 	return 0
 }
 
 # Script se inicia aqui!
 
+case "$#" in 
+	1)
+		if [[ $1 == 'help']]; 
+		then
+			echo "Este script contém diversas funcionalidades separadas sobre funções! Ele é capaz de
+			realizar o deploy do cluster Kubernetes localmente (Minikube), o processo de build, teste 
+			(em aplicações que contém testes), além do deploy parcial ou total do sistema!
+	
+			Uso: ./ci-cd.sh [COMMAND] <ARGS>
+
+			A lista de possíveis COMMAND estão descritas abaixo e o que cada um exemplo de uso:
+
+			environment: Realiza o deploy completo do ambiente de infraestrutura!
+				Uso: ./ci-cd.sh environment
+
+			test: Realiza os testes da aplicação em si, bem como a validação dos arquivos de definição do 
+			Kubernetes dentro das pastas de cada serviço!
+				Uso: ./ci-cd.sh test <frontend | backend | redis>  
+		
+			deploy: Este comando realiza o deploy do sistema completo, podendo ser parcial ou total!
+				Uso: ./ci-cd.sh deploy <service | all> <service_name>
+			
+				Para o caso do deploy ser feito de um serviço (service), o usuário deverá especificar qual serviço
+				ele quer que o deploy seja realizado, logo em seguida como um parâmetro, seguindo a lista de
+				possíveis parâmetros estipulados no comando test!
+
+				A lista de possíveis services (<service_name>) são:
+					backend
+					frontend
+					redis
+		
+				Para o caso do deploy ser total (all), todos os serviços passam a ser deployados dentro do cluster!
+			
+			ESTE SCRIPT ASSUME QUE SEU ARQUIVO DE CONFIGURAÇÃO DO MINIKUBE SE SITUA NO DIRETÓRIO PADRÃO: ~/.kube/config
+		"
+		elif [[ $1 == 'environment' ]];
+		then
+			minikube start
+		else
+		
+		fi;
 if [[ $# -eq 1 && $1 == 'help' ]];
 then
-	echo "Este script contém diversas funcionalidades separadas sobre funções! Ele é capaz de
-	realizar o deploy do cluster Kubernetes localmente (Minikube), o processo de build, teste 
-	(em aplicações que contém testes), além do deploy parcial ou total do sistema!
 	
-	Uso: ./ci-cd.sh [COMMAND] <ARGS>
 
-	A lista de possíveis COMMAND estão descritas abaixo e o que cada um exemplo de uso:
 
-	environment: Realiza o deploy completo do ambiente de infraestrutura!
-		Uso: ./ci-cd.sh environment
-
-	test: Realiza os testes da aplicação em si, bem como a validação dos arquivos de definição do 
-	Kubernetes dentro das pastas de cada serviço!
-		Uso: ./ci-cd.sh test <frontend | backend | redis>  
-
-	deploy: Este comando realiza o deploy do sistema completo, podendo ser parcial ou total!
-
-		Uso: ./ci-cd.sh deploy <service | all> <service_name>
-			
-			Para o caso do deploy ser feito de um serviço (service), o usuário deverá especificar qual serviço
-			ele quer que o deploy seja realizado, logo em seguida como um parâmetro, seguindo a lista de
-			possíveis parâmetros estipulados no comando test!
-
-			A lista de possíveis services (<service_name>) são:
-				backend
-				frontend
-				redis
-		
-			Para o caso do deploy ser total (all), todos os serviços passam a ser deployados dentro do cluster!
-			
-	ESTE SCRIPT ASSUME QUE SEU ARQUIVO DE CONFIGURAÇÃO DO MINIKUBE SE SITUA NO DIRETÓRIO PADRÃO: ~/.kube/config
-	"
-	
 elif [[ $# -eq 1 && $1 == 'environment' ]];
 then
 
