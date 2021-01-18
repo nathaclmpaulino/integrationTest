@@ -48,7 +48,7 @@ spec:
     spec:
       containers:
       - name: redis
-        image: redis:latest
+        image: nathapaulino/redis-chatapp
         volumeMounts:
         - name: redis-persistence-storage
           mountPath: /usr/local/etc/redis/data
