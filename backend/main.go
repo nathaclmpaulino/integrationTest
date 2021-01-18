@@ -70,6 +70,8 @@ func main() {
 
 	redisClient = redis.NewClient(&redis.Options{
 		Addr: os.Getenv("REDIS_ADDR"),
+		Username: os.Getenv("REDIS_USERNAME"),
+		Password: os.Getenv("REDIS_PASSWORD"),
 	})
 
 	http.HandleFunc("/ws", serveWs)

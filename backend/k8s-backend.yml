@@ -4,7 +4,7 @@ metadata:
   name: backend-config
   namespace: default
 data:
-	ALLOWED_ORIGIN: http://frontend
+  ALLOWED_ORIGIN: http://frontend
 ---
 apiVersion: v1
 kind: Service
@@ -51,7 +51,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: nathapaulino/backend_chatapp
+        image: nathapaulino/backend-chatapp
         ports:
         - containerPort: 8080
         - containerPort: 3585
