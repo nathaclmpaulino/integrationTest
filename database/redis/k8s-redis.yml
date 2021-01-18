@@ -39,8 +39,8 @@ spec:
       app: redis
   strategy:
     type: Recreate
-    replicas: 1
-    revisionHistoryLimit: 3
+  replicas: 1
+  revisionHistoryLimit: 3
   template:
     metadata:
       labels:
