@@ -1,0 +1,58 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: default
+spec:
+  REACT_APP_BACKEND_WS:
+  REACT_APP_BACKEND_URL:
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: default
+  labels:
+    app: frontend
+spec:
+  selector:
+    app: frontend
+  type: NodePort
+  ports:
+    - name: frontend
+      protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 30008
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: default
+  labels:
+    app: frontend
+spec:
+  selector:
+    matchLabels:
+      app: frontend
+  strategy: 
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  replicas: 1
+  revisionHistoryLimit: 3
+  template:
+    metadata:
+      matchLabels: 
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: nathapaulino/frontend-chatapp
+        envFrom:
+          configMapRef:
+            - name: frontend-config
+---

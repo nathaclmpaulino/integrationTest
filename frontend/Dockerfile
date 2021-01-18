@@ -16,7 +16,7 @@ ARG REACT_APP_BACKEND_WS
 
 ARG REACT_APP_BACKEND_URL
 
-RUN npm test
+RUN npm run build
 
 FROM nginx:alpine
 
