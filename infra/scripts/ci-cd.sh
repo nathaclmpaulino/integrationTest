@@ -1,8 +1,5 @@
 #!/bin/bash 
 
-# Este script é responsável por fazer toda a lógica de testes e deploy
-# das aplicações no Minikube!
-
 function test_service() {
 	if [[ $1 == 'frontend' ]];
 	then
@@ -11,14 +8,13 @@ function test_service() {
 	elif [[ $1 == 'backend' ]];
 	then
 		echo "Verificando integridade dos arquivos Kubernetes!"
-		if ! kubectl apply -f ./../../backend/k8s-$1.yml --validate=true --dry-run;
+		if ! kubectl apply -f $PWD/../../backend/k8s-$1.yml --validate=true --dry-run=client;
 		then
 			echo "Falha nas definições de Kubernetes do backend!"
 			return -1
 		fi;
 	elif [[ $1 == 'redis' ]];
 	then
-		echo "Arroz"
 		echo "Verificando integridade dos arquivos Kubernetes!"
 		if ! kubectl apply -f $PWD/../../database/redis/k8s-$1.yml --validate=true --dry-run=client ;
 		then
@@ -97,7 +93,7 @@ then
 	test_service $2
 elif [[ $# -eq 2 && $1 == 'deploy' && $2 == 'all' ]];
 then
-	deploy_stack $2
+	deploy_stack
 elif [[ $# -eq 3 && $1 == 'deploy' && $2 == 'service' && ($3 == 'frontend' || $3 == 'backend' || $3 == 'redis') ]];
 then
 	deploy_service $3
