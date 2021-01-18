@@ -42,15 +42,8 @@ function install_kubernetes(){
   return 0
 }
 
-function check_versions(){
-  echo "Teste de versão do docker!"
-    docker --version
-
-  echo "Teste de versão do Minikube!"
-    minikube version
-
-  echo "Teste de versão do Kubectl!"
-    kubectl version --client
+function run_minikube(){
+  minikube start
   
   return 0
 }
@@ -68,6 +61,6 @@ else
   install_docker
   update
   install_kubernetes
-  check_versions
+  run_minikube
   echo "Requisitos instalados com sucesso!"
 fi;
