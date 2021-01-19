@@ -43,7 +43,7 @@ Com isso, houve a necessidade de se utilizar a orquestração de containers (Min
 
 A seguir tem-se uma relação dos pods do sistema e como eles se comunicam pelo cluster! Outras decisões arquiteturais relativas a cada serviço separado serão explicadas em cada subseção deste tópico!
 
-![Arquitetura do Clusher](https://i.imgur.com/a4zq2SQ.png)
+![Arquitetura do Clusher](https://i.imgur.com/OC5kuZW.png)
 
 Neste esquema temos que:
   1. A comunicação entre o front e o backend, bem como o acesso externo ao ambiente, se dá através de um Ingress, mais precisamente sendo um [**NGINX Ingress Controller**](https://kubernetes.github.io/ingress-nginx/). Este recurso é capaz de liberar rotas externas para os serviços através de um NodePort. 
@@ -113,6 +113,8 @@ O desenho a seguir indica uma visão arquitetural da plataforma sobre essas circ
   3. Resiliência;
   4. CI/CD;
 
+![Imgur](https://i.imgur.com/JTVvj98.png)
+
 Os passos a se levarem em conta são:
   1. A criação de estruturas primárias para deploy de um cluster (VPC, Route53, S3 Buckets);
   2. O uso de [**Kops**](https://github.com/kubernetes/kops) ou [**Kubeadm**](https://github.com/kubernetes/kubeadm) ou [**EKS**](https://aws.amazon.com/pt/eks/) para deploy de um novo cluster com o uso de [**Autoscaling Groups**](https://aws.amazon.com/pt/autoscaling/) e [**Spot Instances**](https://aws.amazon.com/pt/ec2/spot/);
@@ -123,10 +125,10 @@ Os passos a se levarem em conta são:
   7. O deploy dos pods do front e do back sobre o cluster, utilizando agora [**IngressRoute**](https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/) como gerenciador de endpoints!
   8. O deploy do Redis sobre uma estrutura independente de gerenciamento como o [**ElastiCache**](https://aws.amazon.com/pt/elasticache/), e o back pode realizar comunicação (mostrado pelas linhas pontilhadas no serviço e fazer armazenamento de dados).
 
-Com isso, se atinge os conceitos de escalabilidade, segurança (através do Traefik), resiliência pelo próprio orquestrador e o CI/CD pode ser uma instância, se for self hosted ou ter permissão para acessar a API do Kubernetes. Fora isso, deve-se fechar os Security Groups do cluster permitindo só alguns específicos para permitir operações de gerência.
+Com isso, se atinge os conceitos de escalabilidade, segurança (através do Traefik), resiliência pelo próprio orquestrador e o CI/CD pode ser uma instância na mesma VPC, se for self hosted ou ter permissão para acessar a API do Kubernetes. Fora isso, deve-se fechar os Security Groups do cluster permitindo só alguns específicos para permitir operações de gerência, consolidando assim um ambiente isolado, onde na imagem se é representado pelo retângulo arrendondado.
 
 Todas as mudanças aqui mencionadas podem ser desenvolvidas e aplicadas via [**Terraform**](https://www.terraform.io/docs/index.html) + [**Ansible**](https://docs.ansible.com/ansible/latest/index.html) com o intuito de prover um maior controle da infraestrutura além de também possibilitar a integração de CI/CD neste processo, dando maior velocidade as tarefas!
 
 <h1></h1>
 
-<p align="center">Integrado com ❤️ por Nathã Paulino</p>
+<p align="center">Integrado por Nathã Paulino</p>
