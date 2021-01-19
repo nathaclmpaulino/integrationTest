@@ -9,7 +9,7 @@
   <a href="#gear-instalação">Instalação</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
   <a href="#rocket-iniciando-aplicação">Iniciando aplicação</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
   <a href="#computer-utilizando">Rodando Local</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="#ambiente-produção">Em Produção</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+  <a href="#ambiente-produção">Em Produção</a>&nbsp;&nbsp;&nbsp;
 </p>
 
 ## :page_with_curl: Sobre
@@ -43,7 +43,7 @@ Com isso, houve a necessidade de se utilizar a orquestração de containers (Min
 
 A seguir tem-se uma relação dos pods do sistema e como eles se comunicam pelo cluster! Outras decisões arquiteturais relativas a cada serviço separado serão explicadas em cada subseção deste tópico!
 
-![ClusterScheme](https://ibb.co/vc9THtY)
+![ClusterScheme](https://app.photobucket.com/u/nathapaulino/a/5978ac8c-f964-4618-8913-7307af1ef204/p/6d2b53cc-9311-48c6-94e9-23823d5be763)
 
 Neste esquema temos que:
   1. A comunicação entre o front e o backend, bem como o acesso externo ao ambiente, se dá através de um Ingress, mais precisamente sendo um [**NGINX Ingress Controller**](https://kubernetes.github.io/ingress-nginx/). Este recurso é capaz de liberar rotas externas para os serviços através de um NodePort. 
@@ -113,16 +113,19 @@ O desenho a seguir indica uma visão arquitetural da plataforma sobre essas circ
   3. Resiliência;
   4. CI/CD;
 
+Os passos a se levarem em conta são:
+  1. A criação de estruturas primárias para deploy de um cluster (VPC, Route53, S3 Buckets);
+  2. O uso de [**Kops**]() ou [**Kubeadm**]() ou [**EKS**]() para deploy de um novo cluster com o uso de [**Autoscaling Groups**]() e [**Spot Instances**]();
+  3. O uso de [**Helm**]() para deploy das estruturas importantes!
+  4. A adição via [**Helm**]() das principais estruturas de fluxo de instâncias, o [**Cluster Autoscaler**]() e o [**Spot Termination Handler**](), garantindo escalabilidade; 
+  5. O deploy do serviço de proxy reverso do [**Traefik**]() substituindo o NGINX Ingress Controller;
+  6. O deploy do [**cert-manager**]() para gestão de certificados TLS;
+  7. O deploy dos pods do front e do back sobre o cluster, utilizando agora [**IngressRoute**]() como gerenciador de endpoints!
+  8. O deploy do Redis sobre uma estrutura independente de gerenciamento como o [**ElastiCache**]().
 
-Os primeiros passos a se levarem em conta são:
-  1. A criação de uma VPC que acomodará o cluster;
-  2. Uma criação de uma HostedZone no Route53 que acomodará a resolução de DNS do cluster;
-  3.   
-  4. 
-  5. 
+Com isso, se atinge os conceitos de escalabilidade, segurança (através do Traefik), resiliência pelo próprio orquestrador e o CI/CD pode ser uma instância, se for self hosted ou ter permissão para acessar a API do Kubernetes. Fora isso, deve-se fechar os Security Groups do cluster permitindo só alguns específicos para permitir operações de gerência.
 
-
-Todas as mudanças aqui podem ser desenvolvidas e aplicadas via Terraform + Ansible com o intuito de prover um maior controle da infraestrutura além de também possibilitar a integração de CI/CD, automatizando ainda mais esse processo! 
+Todas as mudanças aqui mencionadas podem ser desenvolvidas e aplicadas via [**Terraform**]() + [**Ansible**]() com o intuito de prover um maior controle da infraestrutura além de também possibilitar a integração de CI/CD neste processo, dando maior velocidade as tarefas!
 
 <h1></h1>
 
