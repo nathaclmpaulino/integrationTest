@@ -2,7 +2,7 @@ FROM node:alpine AS dependencies
 
 WORKDIR /usr/src/app
 
-RUN chown -R node:node
+RUN chown -R node:node .
 
 USER node
 
