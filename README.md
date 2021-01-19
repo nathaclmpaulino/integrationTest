@@ -115,17 +115,17 @@ O desenho a seguir indica uma visão arquitetural da plataforma sobre essas circ
 
 Os passos a se levarem em conta são:
   1. A criação de estruturas primárias para deploy de um cluster (VPC, Route53, S3 Buckets);
-  2. O uso de [**Kops**]() ou [**Kubeadm**]() ou [**EKS**]() para deploy de um novo cluster com o uso de [**Autoscaling Groups**]() e [**Spot Instances**]();
-  3. O uso de [**Helm**]() para deploy das estruturas importantes!
-  4. A adição via [**Helm**]() das principais estruturas de fluxo de instâncias, o [**Cluster Autoscaler**]() e o [**Spot Termination Handler**](), garantindo escalabilidade; 
-  5. O deploy do serviço de proxy reverso do [**Traefik**]() substituindo o NGINX Ingress Controller;
-  6. O deploy do [**cert-manager**]() para gestão de certificados TLS;
-  7. O deploy dos pods do front e do back sobre o cluster, utilizando agora [**IngressRoute**]() como gerenciador de endpoints!
-  8. O deploy do Redis sobre uma estrutura independente de gerenciamento como o [**ElastiCache**]().
+  2. O uso de [**Kops**](https://github.com/kubernetes/kops) ou [**Kubeadm**](https://github.com/kubernetes/kubeadm) ou [**EKS**](https://aws.amazon.com/pt/eks/) para deploy de um novo cluster com o uso de [**Autoscaling Groups**](https://aws.amazon.com/pt/autoscaling/) e [**Spot Instances**](https://aws.amazon.com/pt/ec2/spot/);
+  3. O uso de [**Helm**](https://helm.sh/) para deploy das estruturas importantes!
+  4. A adição via [**Helm**](https://helm.sh/) das principais estruturas de fluxo de instâncias, o [**Cluster Autoscaler**](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler) e o [**Spot Termination Handler**](https://github.com/kube-aws/kube-spot-termination-notice-handler), garantindo escalabilidade; 
+  5. O deploy do serviço de proxy reverso do [**Traefik**](https://traefik.io/) substituindo o NGINX Ingress Controller;
+  6. O deploy do [**cert-manager**](https://cert-manager.io/docs/) para gestão de certificados TLS, na imagem é representado pelas secrets vinculadas aos IngressRoutes;
+  7. O deploy dos pods do front e do back sobre o cluster, utilizando agora [**IngressRoute**](https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/) como gerenciador de endpoints!
+  8. O deploy do Redis sobre uma estrutura independente de gerenciamento como o [**ElastiCache**](https://aws.amazon.com/pt/elasticache/), e o back pode realizar comunicação (mostrado pelas linhas pontilhadas no serviço e fazer armazenamento de dados).
 
 Com isso, se atinge os conceitos de escalabilidade, segurança (através do Traefik), resiliência pelo próprio orquestrador e o CI/CD pode ser uma instância, se for self hosted ou ter permissão para acessar a API do Kubernetes. Fora isso, deve-se fechar os Security Groups do cluster permitindo só alguns específicos para permitir operações de gerência.
 
-Todas as mudanças aqui mencionadas podem ser desenvolvidas e aplicadas via [**Terraform**]() + [**Ansible**]() com o intuito de prover um maior controle da infraestrutura além de também possibilitar a integração de CI/CD neste processo, dando maior velocidade as tarefas!
+Todas as mudanças aqui mencionadas podem ser desenvolvidas e aplicadas via [**Terraform**](https://www.terraform.io/docs/index.html) + [**Ansible**](https://docs.ansible.com/ansible/latest/index.html) com o intuito de prover um maior controle da infraestrutura além de também possibilitar a integração de CI/CD neste processo, dando maior velocidade as tarefas!
 
 <h1></h1>
 
