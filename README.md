@@ -4,30 +4,58 @@
 
 <p align="center">
   <a href="#page_with_curl-sobre">Sobre</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+  <a href="#-decisões-projeto">
   <a href="#books-requisitos">Requisitos</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
   <a href="#gear-instalação">Instalação</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
   <a href="#rocket-iniciando-aplicação">Iniciando aplicação</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="#computer-utilizando">Utilizando</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+  <a href="#computer-utilizando">Rodando Local</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+  <a href="#ambiente-produção">Em Produção</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
 </p>
-
 
 ## :page_with_curl: Sobre
 Este repositório contém uma automatização de ambiente, escrita em Shell Script, sendo responsável por subir todas as aplicações necessárias para que o sistema de chat composto pelo backend feito em Go, o frontend escrito em ReactJS e a database (Redis) funcione corretamente. 
 
-***ShellScript***:  A escolha foi feita por se tratar uma linguaguem simples e presente em qualquer distribuição Linux. Todos os scripts bash que serão encontrados neste repositório foram desenvolvidos sobre uma distro Debian based (Ubuntu Server 20.04), portanto pode ter alguma inconsistência ao rodar estes scripts sobre outras distribuições, como as RHEL based.
+Este repositório roda este ambiente APENAS de forma local em um Minikube, na seção Em Produção é dito como incorporar esse código para um ambiente de produção com o intuito de preservar as melhores práticas!
+
+***ShellScript***:  A escolha foi feita por se tratar uma linguaguem simples e presente em qualquer distribuição Linux. Os dois scripts bash presentes na pasta raíz do projeto são os responsáveis por integrar os serviços de forma automática e sem nenhum problema para o usuário. A seguir encontra-se a funcionalidade deles
+  1. ci-cd.sh: Este script é responsável por fazer a tarefa de CI/CD da aplicação como um todo, porém publica a imagem no meu próprio DockerHub!
+  2. requirements.sh: Este script instala todos os requisitos necessários para rodar essa aplicação de forma local! A única coisa que se pede, é que tenha git instalado na máquina para buscar este repositório! 
+
+***Estruturação de Pastas***: A escolha por essa estrutura de pastas se deu principalmente pela escalabilidade do sistema! Embora são microsserviços distintos (frontend, backend e database), podendo ficar separados em repositórios diferentes, optou-se por manter os todos no mesmo repositório para facilitar a integração com o script de CI!
  
-***Decisões Arquiteturais***: O foco dessa arquitetura foi a resiliência geral do sistema e o mesmo obedece a seguinte estruturação conforme a imagem abaixo:
+Ao substituir este script para uma ferramenta de CI (GitLab, Jenkins, CircleCI, dentre outras), recomenda-se separar o repositório para fins de isolamento das aplicações!
 
-1. Os microsserviços estão rodando local sobre um Minikube que utiliza Docker como ferramenta de conteirização.
-2. O Redis, embora seja um banco de dados, também está vinculado ao cluster rodando sobre um PVC. 
-3. Todas as comunicações entre os microsserviços do cluster são feitas de forma interna ao invés de se usar qualquer tipo de endereçamento externo, com o intuito de prover maior velocidade de comunicação.
-
-***Estruturação de Pastas***: A escolha por essa estrutura de pastas se deu principalmente pela escalabilidade do sistema! Para adicionar novos serviços a essa stack basta realizar os seguintes passos:
+Para adicionar novos serviços a essa stack basta realizar os seguintes passos:
  1. Adicionar uma nova pasta que contém a estrutura do serviço no repositório. 
  2. Criar o Dockerfile necessário para rodar a aplicação sobre containers. 
- 3. Construir a imagem e armazena-la em um Docker Registry utilizando o comando docker build e docker push 
- 4. Escrever as definições de Kubernetes do serviço.
- 5. Deploy da aplicação no Minikube utilizando o kubectl.
+ 3. Criar, realizar o build e o push da imagem para seu Registro de Imagens preferido,
+ 4. Escrever as definições de Kubernetes do serviço, atentando-se para o local de busca da imagem.
+ 5. Incorporar o novo serviço ao script de CI. 
+ 6. Realizar o deploy utilizando o script de CI.
+
+## :scroll: Decisões de Projeto
+
+Conforme dito anteriormente, este projeto é criado sobre containers Docker e escalado para rodar sobre um Minikube, pensando em primeiro lugar instância na escalabilidade da aplicação!
+
+***O projeto***: As aplicações descritas neste ambiente são extremamente sensíveis a falhas, ou seja, qualquer mínima perturbação de recursos incapacita o usuário de acessar, e qualquer perda de dados é caótica, dado que o tipo de produto que a empresa entrega é algo que aparenta ser muito similar a isso!
+
+Com isso, houve a necessidade de se utilizar a orquestração de containers (Minikube) com o objetivo de resolver essas possíveis falhas, além de prover uma determinada segurança quanto a escalabilidade, caso algum serviço esteja sobrecarregado, o scaling de pods pode ser feito e o próprio Kubernetes é capaz de cuidar internamente do LoadBalancing entre os pods!
+
+A seguir tem-se uma relação dos pods do sistema e como eles se comunicam pelo cluster! Outras decisões arquiteturais relativas a cada serviço separado serão explicadas em cada subseção deste tópico!
+
+![ClusterScheme](https://ibb.co/vc9THtY)
+
+Neste esquema temos que:
+  1. A comunicação entre o front e o backend, bem como o acesso externo ao ambiente, se dá através de um Ingress, mais precisamente sendo um [**NGINX Ingress Controller**](https://kubernetes.github.io/ingress-nginx/). Este recurso é capaz de liberar rotas externas para os serviços através de um NodePort. 
+  2. A comunicação por sua vez entre o backend e o redis, por se tratar de uma comunicação extremamente sensível, e não querer disponibilizar uma rota para acesso externo do banco, o uso do endereçamento interno proporciona um grau a mais de segurança a este meio!
+  3. Embora o Kubernetes seja uma aplicação voltada para conteúdos Stateless, o Redis ficou abarcado neste meio com o intuito de permitir uma possível estratégia de recuperação de falhas mais robusta, bem como aumentar a velocidade do mesmo! Para persistência dos dados, tem-se um PersistenceVolumeClaim (PVC) attachado a este serviço, para que o mesmo consiga armazenar os dados de uma forma definitiva.
+  4. O próprio frontend da aplicação abarca um NGINX também para realizar controles estruturais importantes de headers, gerenciar múltiplas conexões para um mesmo pod, entre outros escopos mais avançados.
+
+***Pontos de melhoria***: Neste contexto tem-se três possíveis pontos de melhoria a serem discutidos:
+
+  1. As comunicações entre o front e o back não apresentam certificados TLS, sendo assim, elas são extremamente vulneráveis. Para se consertar este problema é necessário a presença de um servidor DNS, de modo que, a partir da resolução de DNS, seja gerenciável assim os certificados emitidos por CRDs como o [**cert-manager**](https://cert-manager.io/docs/).
+  2. O segundo problema está no Redis, que o mesmo não apresenta nenhum mecanismo confiável de autenticação. Embora o mesmo esteja para uso privado dentro do cluster, colocar uma camada a mais de segurança nunca é demais!
+  3. O Redis é um banco de gerência própria, self-hosted nesse caso, pois deve aguentar apenas 1000 mensagens, o que é relativamente pouco. A medida que o sistema cresce, este banco já começa a ter dificuldades de crescimento pelo lado da aplicação proposta. Uma sugestão é utilizar o Redis como uma cache de informações para serem persistidas em outro lugar futuramente, compartilhar a responsabilidade da mesma com um provedor cloud ou caso o volume de informações seja muito grande, pode-se aumentar o espaço alocado no PVC e utilizar um banco distribuído, caso o número de requisições seja muito grande!
 
 ## :books: Requisitos
 - Ter [**Git**](https://git-scm.com/) para clonar o projeto.
@@ -35,35 +63,66 @@ Este repositório contém uma automatização de ambiente, escrita em Shell Scri
 - Ter [**Minikube**](https://minikube.sigs.k8s.io/docs/) instalado.
 - Ter [**Kubectl**](https://kubernetes.io/docs/tasks/tools/install-kubectl/) instalado.
 - Ter uma conta em um docker registry de docker imagens no [**DockerHub**](https://hub.docker.com/).
-- 
+
 ## :gear: Instalação de requisitos
 ``` bash
   # Clone o projeto: 
-  $ git clone 
+  $ git clone https://github.com/nathaclmpaulino/integrationTest.git
   
-  # Execute o script requirements.sh que se encontra dentro da pasta infra, no subdiretório scripts:
-  $ 
+  # Execute o script requirements.sh que se encontra na raiz do repositório:
+  $ ./requirements.sh run
   
-  # Execute o script environment.sh que se encontra dentro da pasta infra, no subdiretório scripts:
-  $ 
+  # Utilize o comando abaixo para rodar docker sem permissão de super usuário (sudo), e ./após ele, reinicie o computador (no caso de VM) ou feche o terminal e abra outro (caso PC) para que as mudanças tenham sido concluídas.
+  $ newgrp docker
+
+  # Execute a segunda etapa do script de requirements. Esta parte é responsável por deixar um minikube running em seu ambiente local e também em fornecer o IP do cluster Minikube
+  $ ./requirements.sh config
+
+  # Adicione este IP juntamente ao seu arquivo /etc/hosts. Este comando vai ser necessário para permitir o Nginx IngressController criar uma rota de acesso ao seu navegador. Estes dois comandos precisarão de privilégios de super usuário!
+  root# echo "<IP obtido da última linha> frontend.cluster"
+  root# echo "<IP obtido da última linha> backend.cluster"
 
 ```
-Ao final desse passo, o usuário terá todos os requisitos mencionados instalados, bem como um cluster Minikube rodando em seu ambiente local. Quaisquer dúvidas sobre como usar um script, leia o README da pasta e, caso queira saber mais sobre o mesmo, utilize o seguinte comando: `$ ./<nome_do_script>.sh help`. 
+Ao final desse processo, você terá um Minikube rodando local na sua máquina com o config do Kubernetes diretamente apontado para ele e também com os addons de storage e ingresses funcionando. 
+
+Estes dois levam um tempo para serem deployados, mas é de extrema importância que esperem que o script termine com sucesso!
 
 ## :rocket: Iniciando aplicação
 ```bash
-  # Execute o script ci.sh que se encontra dentro da pasta infra, o subdiretório scripts:
-  $ ./ci.sh
+  # Execute as três etapas de CI!
+  $ ./ci-cd.sh pipeline redis
 
+  $ ./ci-cd.sh pipeline backend
+
+  $ ./ci-cd.sh pipeline frontend
 ```
+ 
+## :no_entry: :computer: Rodando local
 
-## :computer: Utilizando
+Ao final da execução do script anterior tem-se um ambiente funcional! Para acessar é só usar o endpoint `frontend.cluster/login`. Lembrando que ao escrever os IPs no /etc/hosts conforme feito na etapa de Instalação de requisitos, você permitiu a criação de endpoints específicos externos (LoadBalancers) para o mapeamento interno do cluster! 
 
- <h4> Ao final da execução do script anterior tem-se um ambiente funcional e funcionando localmente! Para acesssar os serviços via interface web, basta</h4>
+Conforme dito anteriormente, a comunicação entre o pod do backend e o pod do redis se dá internamente, por IP e porta do serviço! Assim cria-se uma camada a mais de proteção ao banco!
 
-GIF de funcionamento...
+## :computer: Em Produção
 
-***GUI***: Caso prefira uma interface gráfica para acompanhar melhor o funcionamento do cluster, eu particularmente sugiro o [**Lens**](https://k8slens.dev/)! Basta baixar e instalar o Lens! Ao abrir o programa pela primeira vez, siga o passo a passo de descoberta de um cluster Kubernetes e você está livre para aproveitar essa nova interface!
+A seguir temos a última seção responsável por mapear as mudanças para um ambiente de produção! Este ambiente será pensado em uma infraestrutura cloud na AWS!
+
+O desenho a seguir indica uma visão arquitetural da plataforma sobre essas circunstâncias de produção, levando em consideração os seguintes pontos:
+  1. Escalabilidade;
+  2. Segurança;
+  3. Resiliência;
+  4. CI/CD;
+
+
+Os primeiros passos a se levarem em conta são:
+  1. A criação de uma VPC que acomodará o cluster;
+  2. Uma criação de uma HostedZone no Route53 que acomodará a resolução de DNS do cluster;
+  3.   
+  4. 
+  5. 
+
+
+Todas as mudanças aqui podem ser desenvolvidas e aplicadas via Terraform + Ansible com o intuito de prover um maior controle da infraestrutura além de também possibilitar a integração de CI/CD, automatizando ainda mais esse processo! 
 
 <h1></h1>
 

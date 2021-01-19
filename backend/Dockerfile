@@ -6,6 +6,6 @@ COPY . ./
 
 RUN go get ./
 
-RUN go build ./
+RUN go build . 
 
-ENTRYPOINT go run main.go
+CMD [ "./backend" ] 
