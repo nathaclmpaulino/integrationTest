@@ -43,7 +43,7 @@ Com isso, houve a necessidade de se utilizar a orquestração de containers (Min
 
 A seguir tem-se uma relação dos pods do sistema e como eles se comunicam pelo cluster! Outras decisões arquiteturais relativas a cada serviço separado serão explicadas em cada subseção deste tópico!
 
-![ClusterScheme](https://app.photobucket.com/u/nathapaulino/a/5978ac8c-f964-4618-8913-7307af1ef204/p/6d2b53cc-9311-48c6-94e9-23823d5be763)
+[Imgur](https://i.imgur.com/a4zq2SQ.png)
 
 Neste esquema temos que:
   1. A comunicação entre o front e o backend, bem como o acesso externo ao ambiente, se dá através de um Ingress, mais precisamente sendo um [**NGINX Ingress Controller**](https://kubernetes.github.io/ingress-nginx/). Este recurso é capaz de liberar rotas externas para os serviços através de um NodePort. 
