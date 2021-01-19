@@ -8,8 +8,8 @@
   <a href="#books-requisitos">Requisitos</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
   <a href="#gear-instalação">Instalação</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
   <a href="#rocket-iniciando-aplicação">Iniciando aplicação</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="#computer-utilizando">Rodando Local</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="#ambiente-produção">Em Produção</a>&nbsp;&nbsp;&nbsp;
+  <a href="#no_entry computer-rodando-local">Rodando Local</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+  <a href="#computer-produção">Em Produção</a>&nbsp;&nbsp;&nbsp;
 </p>
 
 ## :page_with_curl: Sobre
