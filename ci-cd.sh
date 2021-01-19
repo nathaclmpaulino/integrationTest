@@ -8,25 +8,25 @@
 function test_service() {
 	if [[ $1 == 'frontend' ]];
 	then
-		if ! docker build --build-arg REACT_APP_BACKEND_WS=http://backend.cluster --build-arg REACT_APP_BACKEND_URL=http://backend.cluster -f $PWD/../../Dockerfile.test;
+		if ! docker build --build-arg REACT_APP_BACKEND_WS=http://backend.cluster --build-arg REACT_APP_BACKEND_URL=http://backend.cluster -f $PWD/frontend/Dockerfile.test;
 		then
 			echo "Falha no teste do container do $1!"
 			return -3
-		elif ! kubectl apply -f $PWD/../../frontend/kubernetes/k8s-$1.yml --validate=true --dry-run=client || kubectl apply -f $PWD/../../frontend/kubernetes/k8s-$1-ingress.yml --validate=true --dry-run=client;
+		elif ! kubectl apply -f $PWD/frontend/kubernetes/k8s-$1.yml --validate=true --dry-run=client || kubectl apply -f $PWD/frontend/kubernetes/k8s-$1-ingress.yml --validate=true --dry-run=client;
 		then
 			echo "Erro na validação dos arquivos de definição de K8s do $1!"
 			return -2
 		fi;
 	elif [[ $1 == 'backend' ]];
 	then
-		if ! kubectl apply -f $PWD/../../backend/kubernetes/k8s-$1.yml --validate=true --dry-run=client || kubectl apply -f $PWD/../../frontend/kubernetes/k8s-$1-ingress.yml --validate=true --dry-run=client || kubectl apply -f $PWD/../../frontend/kubernetesk8s-$1-config.yml --validate=true --dry-run=client;
+		if ! kubectl apply -f $PWD/backend/kubernetes/k8s-$1.yml --validate=true --dry-run=client || kubectl apply -f $PWD/frontend/kubernetes/k8s-$1-ingress.yml --validate=true --dry-run=client || kubectl apply -f $PWD/frontend/kubernetesk8s-$1-config.yml --validate=true --dry-run=client;
 		then
 			echo "Erro na validação dos arquivos de definição de K8s do $1!"
 			return -2
 		fi;
 	elif [[ $1 == 'redis' ]];
 	then
-		if ! kubectl apply -f $PWD/../../database/redis/k8s-$1.yml --validate=true --dry-run=client ;
+		if ! kubectl apply -f $PWD/database/redis/k8s-$1.yml --validate=true --dry-run=client ;
 		then
 			echo "Erro na validação dos arquivos de definição de K8s do $1!"
 			return -2
@@ -41,16 +41,16 @@ function test_service() {
 function deploy_service() {
 	if [[ $1 == 'frontend' ]];
 	then
-		kubectl apply -f $PWD/../../frontend/kubernetes/k8s-$1-ingress.yml
-		kubectl apply -f $PWD/../../frontend/kubernetes/k8s-$1.yml
+		kubectl apply -f $PWD/frontend/kubernetes/k8s-$1-ingress.yml
+		kubectl apply -f $PWD/frontend/kubernetes/k8s-$1.yml
 	elif [[ $1 == 'backend' ]];
 	then
-		kubectl apply -f $PWD/../../backend/kubernetes/k8s-$1-config.yml
-		kubectl apply -f $PWD/../../backend/kubernetes/k8s-$1-ingress.yml
-		kubectl apply -f $PWD/../../backend/kubernetes/k8s-$1.yml
+		kubectl apply -f $PWD/backend/kubernetes/k8s-$1-config.yml
+		kubectl apply -f $PWD/backend/kubernetes/k8s-$1-ingress.yml
+		kubectl apply -f $PWD/backend/kubernetes/k8s-$1.yml
 	elif [[ $1 == 'redis' ]];
 	then
-		kubectl apply -f $PWD/../../database/redis/k8s-$1.yml
+		kubectl apply -f $PWD/database/redis/k8s-$1.yml
 	else
 		echo "Erro na execução do script! Consulte ./ci-cd.sh help para mais informações!"
 		return -1
@@ -61,12 +61,12 @@ function deploy_service() {
 function push_dockerhub() {
 	case $1 in 
 		frontend)
-			docker build -t frontend --build-arg REACT_APP_BACKEND_URL=http://backend.cluster REACT_APP_BACKEND_WS=http://backend.cluster $PWD/../../frontend
+			docker build -t frontend --build-arg REACT_APP_BACKEND_URL=http://backend.cluster REACT_APP_BACKEND_WS=http://backend.cluster $PWD/frontend
 			docker tag frontend nathapaulino/frontend-chatapp
 			docker push nathapaulino/frontend-chatapp
 			;;
 		backend)
-			docker build -t backend $PWD/../../backend
+			docker build -t backend $PWD/backend
 			docker tag backend nathapaulino/backend-chatapp
 			docker push nathapaulino/backend-chatapp
 			;;

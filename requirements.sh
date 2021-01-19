@@ -23,7 +23,6 @@ function install_docker(){
   
   echo "Permitindo o uso de Docker sem sudo"
     sudo usermod -aG docker ${USER}
-    source ~/.bashrc
 
   return 0
 }
@@ -44,23 +43,43 @@ function install_kubernetes(){
 
 function run_minikube(){
   minikube start
-  
+  minikube ip
+  minikube addons enable storage-provisioner 
+  minikube addons enable ingress
   return 0
 }
 
-if [[ $# -eq 1 && $1 == 'help' ]]; 
+if [[ $# -eq 1 ]]; 
 then
-  echo "Uso: ./requirements.sh"
-  echo "Este script instala os requisitos para rodar esse repositório! (Docker, Kubernetes, Minikube)"
-elif [[ $# -gt 1 ]]; 
-then
-  echo "Uso: ./requirements.sh"
-  echo "Para mais informações use: ./requirements.sh help"
+  case $1 in
+    help)
+        echo "Uso: ./requirements.sh [COMMAND]"
+        echo "Lista de COMMAND disponíveis:
+              help: Mostra uma ajuda!
+              docker: Instala o docker na máquina!
+              k8s: Instala o minikube e o kubectl na máquina!
+              run: Instala as dependências todas do projeto!
+              config: Roda o ambiente local do Minikube! Este comando deve ser rodado apenas depois de instalar o docker e o minikube!"
+        echo "Este script instala os requisitos para rodar esse repositório! (Docker, Kubernetes, Minikube)"    
+      ;;
+    k8s)
+      update
+      install_kubernetes
+      ;;
+    docker)
+      update
+      install_docker
+      ;;
+    run)
+      update 
+      install_docker
+      update
+      install_kubernetes
+      ;;
+    config)
+      run_minikube
+      ;;
+  esac
 else
-  update
-  install_docker
-  update
-  install_kubernetes
-  run_minikube
-  echo "Requisitos instalados com sucesso!"
+  echo "Use ./requirements.sh help para mais informações!"
 fi;
