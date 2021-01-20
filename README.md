@@ -72,13 +72,18 @@ Neste esquema temos que:
   # Execute o script requirements.sh que se encontra na raiz do repositório:
   $ ./requirements.sh run
   
-  # Utilize o comando abaixo para rodar docker sem permissão de super usuário (sudo), e ./após ele, reinicie o computador (no caso de VM) ou feche o terminal e abra outro (caso PC) para que as mudanças tenham sido concluídas.
+  # Utilize o comando abaixo para rodar docker sem permissão de super usuário (sudo), e após ele, 
+  # reinicie o computador (no caso de VM) ou feche o terminal e abra outro (caso PC) 
+  #para que as mudanças tenham sido concluídas.
   $ newgrp docker
 
-  # Execute a segunda etapa do script de requirements. Esta parte é responsável por deixar um minikube running em seu ambiente local e também em fornecer o IP do cluster Minikube
+  # Execute a segunda etapa do script de requirements. Esta parte é responsável por deixar um 
+  # minikube running em seu ambiente local e também em fornecer o IP do cluster Minikube
   $ ./requirements.sh config
 
-  # Adicione este IP juntamente ao seu arquivo /etc/hosts. Este comando vai ser necessário para permitir o Nginx IngressController criar uma rota de acesso ao seu navegador. Estes dois comandos precisarão de privilégios de super usuário!
+  # Adicione este IP juntamente ao seu arquivo /etc/hosts. Este comando vai ser necessário para 
+  # permitir o Nginx IngressController criar uma rota de acesso ao seu navegador. 
+  # Estes dois comandos precisarão de privilégios de super usuário!
   root# echo "<IP obtido da última linha> frontend.cluster"
   root# echo "<IP obtido da última linha> backend.cluster"
 
