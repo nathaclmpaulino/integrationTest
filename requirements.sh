@@ -43,9 +43,9 @@ function install_kubernetes(){
 
 function run_minikube(){
   minikube start
-  minikube ip
   minikube addons enable storage-provisioner 
   minikube addons enable ingress
+  minikube ip
   return 0
 }
 
