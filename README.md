@@ -4,12 +4,12 @@
 
 <p align="center">
   <a href="#page_with_curl-sobre">Sobre</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="#-decisões-projeto">
+  <a href="#scroll-decisões-de-projeto">Decisões de Projeto</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
   <a href="#books-requisitos">Requisitos</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="#gear-instalação">Instalação</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+  <a href="#gear-instalação-de-requisitos">Instalação</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
   <a href="#rocket-iniciando-aplicação">Iniciando aplicação</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="#computer-utilizando">Rodando Local</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="#ambiente-produção">Em Produção</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+  <a href="#no_entry-computer-ambiente-local">Ambiente Local</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+  <a href="#computer-ambiente-de-produção">Produção</a>&nbsp;&nbsp;&nbsp;
 </p>
 
 ## :page_with_curl: Sobre
@@ -43,7 +43,7 @@ Com isso, houve a necessidade de se utilizar a orquestração de containers (Min
 
 A seguir tem-se uma relação dos pods do sistema e como eles se comunicam pelo cluster! Outras decisões arquiteturais relativas a cada serviço separado serão explicadas em cada subseção deste tópico!
 
-![ClusterScheme](https://ibb.co/vc9THtY)
+![Arquitetura do Clusher](https://i.imgur.com/OC5kuZW.png)
 
 Neste esquema temos que:
   1. A comunicação entre o front e o backend, bem como o acesso externo ao ambiente, se dá através de um Ingress, mais precisamente sendo um [**NGINX Ingress Controller**](https://kubernetes.github.io/ingress-nginx/). Este recurso é capaz de liberar rotas externas para os serviços através de um NodePort. 
@@ -72,13 +72,18 @@ Neste esquema temos que:
   # Execute o script requirements.sh que se encontra na raiz do repositório:
   $ ./requirements.sh run
   
-  # Utilize o comando abaixo para rodar docker sem permissão de super usuário (sudo), e ./após ele, reinicie o computador (no caso de VM) ou feche o terminal e abra outro (caso PC) para que as mudanças tenham sido concluídas.
+  # Utilize o comando abaixo para rodar docker sem permissão de super usuário (sudo), e após ele, 
+  # reinicie o computador (no caso de VM) ou feche o terminal e abra outro (caso PC) 
+  #para que as mudanças tenham sido concluídas.
   $ newgrp docker
 
-  # Execute a segunda etapa do script de requirements. Esta parte é responsável por deixar um minikube running em seu ambiente local e também em fornecer o IP do cluster Minikube
+  # Execute a segunda etapa do script de requirements. Esta parte é responsável por deixar um 
+  # minikube running em seu ambiente local e também em fornecer o IP do cluster Minikube
   $ ./requirements.sh config
 
-  # Adicione este IP juntamente ao seu arquivo /etc/hosts. Este comando vai ser necessário para permitir o Nginx IngressController criar uma rota de acesso ao seu navegador. Estes dois comandos precisarão de privilégios de super usuário!
+  # Adicione este IP juntamente ao seu arquivo /etc/hosts. Este comando vai ser necessário para 
+  # permitir o Nginx IngressController criar uma rota de acesso ao seu navegador. 
+  # Estes dois comandos precisarão de privilégios de super usuário!
   root# echo "<IP obtido da última linha> frontend.cluster"
   root# echo "<IP obtido da última linha> backend.cluster"
 
@@ -97,13 +102,13 @@ Estes dois levam um tempo para serem deployados, mas é de extrema importância 
   $ ./ci-cd.sh pipeline frontend
 ```
  
-## :no_entry: :computer: Rodando local
+## :no_entry: :computer: Ambiente local
 
 Ao final da execução do script anterior tem-se um ambiente funcional! Para acessar é só usar o endpoint `frontend.cluster/login`. Lembrando que ao escrever os IPs no /etc/hosts conforme feito na etapa de Instalação de requisitos, você permitiu a criação de endpoints específicos externos (LoadBalancers) para o mapeamento interno do cluster! 
 
 Conforme dito anteriormente, a comunicação entre o pod do backend e o pod do redis se dá internamente, por IP e porta do serviço! Assim cria-se uma camada a mais de proteção ao banco!
 
-## :computer: Em Produção
+## :computer: Ambiente de Produção
 
 A seguir temos a última seção responsável por mapear as mudanças para um ambiente de produção! Este ambiente será pensado em uma infraestrutura cloud na AWS!
 
@@ -113,17 +118,22 @@ O desenho a seguir indica uma visão arquitetural da plataforma sobre essas circ
   3. Resiliência;
   4. CI/CD;
 
+![Imgur](https://i.imgur.com/JTVvj98.png)
 
-Os primeiros passos a se levarem em conta são:
-  1. A criação de uma VPC que acomodará o cluster;
-  2. Uma criação de uma HostedZone no Route53 que acomodará a resolução de DNS do cluster;
-  3.   
-  4. 
-  5. 
+Os passos a se levarem em conta são:
+  1. A criação de estruturas primárias para deploy de um cluster (VPC, Route53, S3 Buckets);
+  2. O uso de [**Kops**](https://github.com/kubernetes/kops) ou [**Kubeadm**](https://github.com/kubernetes/kubeadm) ou [**EKS**](https://aws.amazon.com/pt/eks/) para deploy de um novo cluster com o uso de [**Autoscaling Groups**](https://aws.amazon.com/pt/autoscaling/) e [**Spot Instances**](https://aws.amazon.com/pt/ec2/spot/);
+  3. O uso de [**Helm**](https://helm.sh/) para deploy das estruturas importantes!
+  4. A adição via [**Helm**](https://helm.sh/) das principais estruturas de fluxo de instâncias, o [**Cluster Autoscaler**](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler) e o [**Spot Termination Handler**](https://github.com/kube-aws/kube-spot-termination-notice-handler), garantindo escalabilidade; 
+  5. O deploy do serviço de proxy reverso do [**Traefik**](https://traefik.io/) substituindo o NGINX Ingress Controller;
+  6. O deploy do [**cert-manager**](https://cert-manager.io/docs/) para gestão de certificados TLS, na imagem é representado pelas secrets vinculadas aos IngressRoutes;
+  7. O deploy dos pods do front e do back sobre o cluster, utilizando agora [**IngressRoute**](https://doc.traefik.io/traefik/routing/providers/kubernetes-crd/) como gerenciador de endpoints!
+  8. O deploy do Redis sobre uma estrutura independente de gerenciamento como o [**ElastiCache**](https://aws.amazon.com/pt/elasticache/), e o back pode realizar comunicação (mostrado pelas linhas pontilhadas no serviço e fazer armazenamento de dados).
 
+Com isso, se atinge os conceitos de escalabilidade, segurança (através do Traefik), resiliência pelo próprio orquestrador e o CI/CD pode ser uma instância na mesma VPC, se for self hosted ou ter permissão para acessar a API do Kubernetes. Fora isso, deve-se fechar os Security Groups do cluster permitindo só alguns específicos para permitir operações de gerência, consolidando assim um ambiente isolado, onde na imagem se é representado pelo retângulo arrendondado.
 
-Todas as mudanças aqui podem ser desenvolvidas e aplicadas via Terraform + Ansible com o intuito de prover um maior controle da infraestrutura além de também possibilitar a integração de CI/CD, automatizando ainda mais esse processo! 
+Todas as mudanças aqui mencionadas podem ser desenvolvidas e aplicadas via [**Terraform**](https://www.terraform.io/docs/index.html) + [**Ansible**](https://docs.ansible.com/ansible/latest/index.html) com o intuito de prover um maior controle da infraestrutura além de também possibilitar a integração de CI/CD neste processo, dando maior velocidade as tarefas!
 
 <h1></h1>
 
-<p align="center">Integrado com ❤️ por Nathã Paulino</p>
+<p align="center">Integrado por Nathã Paulino</p>
