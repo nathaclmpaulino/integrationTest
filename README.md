@@ -4,12 +4,12 @@
 
 <p align="center">
   <a href="#page_with_curl-sobre">Sobre</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="#-decisões-projeto">
+  <a href="#scroll-decisões-de-projeto">Decisões de Projeto</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
   <a href="#books-requisitos">Requisitos</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="#gear-instalação">Instalação</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+  <a href="#gear-instalação-de-requisitos">Instalação</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
   <a href="#rocket-iniciando-aplicação">Iniciando aplicação</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="#no_entry computer-rodando-local">Rodando Local</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-  <a href="#computer-produção">Em Produção</a>&nbsp;&nbsp;&nbsp;
+  <a href="#no_entry-computer-ambiente-local">Ambiente Local</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+  <a href="#computer-ambiente-de-produção">Produção</a>&nbsp;&nbsp;&nbsp;
 </p>
 
 ## :page_with_curl: Sobre
@@ -97,13 +97,13 @@ Estes dois levam um tempo para serem deployados, mas é de extrema importância 
   $ ./ci-cd.sh pipeline frontend
 ```
  
-## :no_entry: :computer: Rodando local
+## :no_entry: :computer: Ambiente local
 
 Ao final da execução do script anterior tem-se um ambiente funcional! Para acessar é só usar o endpoint `frontend.cluster/login`. Lembrando que ao escrever os IPs no /etc/hosts conforme feito na etapa de Instalação de requisitos, você permitiu a criação de endpoints específicos externos (LoadBalancers) para o mapeamento interno do cluster! 
 
 Conforme dito anteriormente, a comunicação entre o pod do backend e o pod do redis se dá internamente, por IP e porta do serviço! Assim cria-se uma camada a mais de proteção ao banco!
 
-## :computer: Em Produção
+## :computer: Ambiente de Produção
 
 A seguir temos a última seção responsável por mapear as mudanças para um ambiente de produção! Este ambiente será pensado em uma infraestrutura cloud na AWS!
 
