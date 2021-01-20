@@ -61,12 +61,14 @@ function deploy_service() {
 function push_dockerhub() {
 	case $1 in 
 		frontend)
-			docker build -t frontend --build-arg REACT_APP_BACKEND_URL=http://backend.cluster REACT_APP_BACKEND_WS=http://backend.cluster $PWD/frontend
+			docker login --username nathapaulino $2
+			docker build -t frontend --build-arg REACT_APP_BACKEND_URL=http://backend.cluster REACT_APP_BACKEND_WS=http://backend.cluster $PWD/frontend/
 			docker tag frontend nathapaulino/frontend-chatapp
 			docker push nathapaulino/frontend-chatapp
 			;;
 		backend)
-			docker build -t backend $PWD/backend
+			docker login --username nathapaulino $2
+			docker build -t backend $PWD/backend/
 			docker tag backend nathapaulino/backend-chatapp
 			docker push nathapaulino/backend-chatapp
 			;;
@@ -82,12 +84,12 @@ function pipeline() {
 	case $1 in
 		frontend)
 			test_service $1
-			push_dockerhub $1
+			push_dockerhub $1 $2
 			deploy_service $1
 			;;
 		backend)
 			test_service $1
-			push_dockerhub $1
+			push_dockerhub $1 $2
 			deploy_service $1
 			;;
 		redis)
@@ -125,7 +127,7 @@ then
 	test_service $2
 elif [[ $# -eq 2 && $1 == 'pipeline' && ($2 == 'frontend' || $2 == 'backend' || $2 == 'redis') ]];
 then
-	pipeline $2
+	pipeline $2 $DOCKER_HUB_TOKEN_TESTE
 else
 	echo "Comando não encontrado!
 Uso: ./ci-cd.sh [COMMAND]
