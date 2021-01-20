@@ -134,6 +134,7 @@ Com isso, se atinge os conceitos de escalabilidade, segurança (através do Trae
 
 Todas as mudanças aqui mencionadas podem ser desenvolvidas e aplicadas via [**Terraform**](https://www.terraform.io/docs/index.html) + [**Ansible**](https://docs.ansible.com/ansible/latest/index.html) com o intuito de prover um maior controle da infraestrutura além de também possibilitar a integração de CI/CD neste processo, dando maior velocidade as tarefas!
 
+Uma última dica! Eu particularmente não uso dashboard padrão do Kubernetes e por isso não comentei até aqui, visto que isso não atrapalha ninguém... Mas se quiserem uma sugestão o [**Lens**](https://k8slens.dev/) está ai!
 <h1></h1>
 
 <p align="center">Integrado por Nathã Paulino</p>
