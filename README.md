@@ -84,15 +84,33 @@ Neste esquema temos que:
   # Adicione este IP juntamente ao seu arquivo /etc/hosts. Este comando vai ser necessário para 
   # permitir que o Nginx IngressController criar uma rota de acesso ao seu navegador. 
   # Estes dois comandos precisarão de privilégios de super usuário!
-  root# echo "<IP obtido da última linha> frontend.cluster" >> /etc/hosts
-  root# echo "<IP obtido da última linha> backend.cluster" >> /etc/hosts
+  root# echo "<IP obtido na penultima linha> frontend.cluster" >> /etc/hosts
+  root# echo "<IP obtido na penultima linha> backend.cluster" >> /etc/hosts
 
 ```
 Ao final desse processo, você terá um Minikube rodando local na sua máquina com o config do Kubernetes diretamente apontado para ele e também com os addons de storage e ingresses funcionando. 
 
-Estes dois levam um tempo para serem deployados, mas é de extrema importância que esperem que o script termine com sucesso! E que o seu arquivo /etc/hosts fique com uma cara parecida com essa descrita abaixo:
+Segue uma imagem de como seu arquivo /etc/hosts deve ficar na máquina!
 
 ![Imgur](https://i.imgur.com/dPtlvo4.png)
+
+Estes dois levam um tempo para serem deployados, mas é de extrema importância que esperem que o script termine com sucesso! 
+
+A partir daqui é extremamente recomendado que você tenha acesso a uma dashboard do Kubernetes! Como isso é extremamente pessoal, mas eu gosto de usar o [**Lens**](https://k8slens.dev/). 
+
+Se você estiver rodando em ambiente Linux que contenha o snap, use `sudo snap install kontena-lens --classic` para realizar o download do programa! Siga o processo de descoberta do cluster até ter acesso ao cluster de acordo com a imagem
+
+![Imgur](https://i.imgur.com/N13sIMo.png)
+
+***Resolvendo alguns erros do Minikube***:
+
+Caso seja necessário, reinicie o Pod do CoreDNS para remover erro de ReadinessProbe do container e também pode excluir os dois Pods do tipo Job após os Jobs estiverem terminados!
+
+![Imgur](https://i.imgur.com/gfLTpdu.png)
+
+<//>
+
+Agora basta continuar com o processo de iniciando a aplicação para que você tenha acesso aos serviços que compõem o cluster!
 
 ## :rocket: Iniciando aplicação
 ```bash
@@ -100,20 +118,20 @@ Estes dois levam um tempo para serem deployados, mas é de extrema importância 
   
   # Uso: ./ci-cd.sh pipeline SERVICE_NAME [USERNAME] [ACCESS_TOKEN] [REGISTRY_ADDRESS] [REGISTRY_NAME] [REACT_APP_BACKEND_WS] e [REACT_APP_BACKEND_URL]
 
-  $ ./ci-cd.sh pipeline redis
+  $ ./ci-cd.sh pipeline redis 
 
   $ ./ci-cd.sh pipeline backend <USERNAME> <ACCESS_TOKEN> nathapaulino backend-chatapp  
 
-  $ ./ci-cd.sh pipeline frontend <USERNAME> <ACCESS_TOKEN> nathapaulino frontend ws://backend.cluster http://backend.cluster
+  $ ./ci-cd.sh pipeline frontend <USERNAME> <ACCESS_TOKEN> nathapaulino frontend-chatapp ws://backend.cluster http://backend.cluster
 
   # Caso queira testar somente aquele serviço (juntamente com os arquivos k8s), basta realizar o seguinte comando!
   # Uso: ./ci-cd.sh test SERVICE_NAME [REGISTRY_ADDRESS] [REGISTRY_NAME] [REACT_APP_BACKEND_WS] e [REACT_APP_BACKEND_URL]
 
   $ ./ci-cd.sh test redis
 
-  $ ./ci-cd.sh test backend <REGISTRY_ADDRESS> <REGISTRY_NAME>
+  $ ./ci-cd.sh test backend nathapaulino backend-chatapp
 
-  $ ./ci-cd.sh test frontend <REGISTRY_ADDRESS> <REGISTRY_NAME> <REACT_APP_BACKEND_WS> <REACT_APP_BACKEND_URL>
+  $ ./ci-cd.sh test frontend nathapaulino frontend-chatapp http://backend.cluster ws://backend.cluster
 ```
 Este script precisa de muitos parâmetros, pois ele foi construído para ser o mais universal possível, a ideia aqui era de prover um esquema de CI/CD, ainda sim que manual, funcionasse de forma que fosse possível outra pessoa qualquer utilizar, desde que a mesma esteja rodando sobre um Minikube! 
 
@@ -125,10 +143,10 @@ O conteúdo de REGISTRY_ADDRESS e REGISTRY_NAME se dão da seguinte forma, consi
     spec:
       containers:
         name: frontend
-        image: ${REGISTRY_ADDRESS}/${REGISTRY_NAME}:${IMAGE_TAG}
+        image: ${REGISTRY_ADDRESS}/${REGISTRY_NAME}:${TAG}
     #...
 ```
-A variável denominada IMAGE_TAG será gerada de forma aleatória pelo script, assim não se tem problema em realizar tal procedimento! 
+A variável denominada TAG será gerada de forma aleatória pelo script, com isso, garante-se o flush da imagem no Deployment! 
 
 O deploy do redis, por sua vez, usa a docker image pública do redis, não sendo necessário um repositório no registry de imagens do DockerHub.
 
@@ -164,7 +182,6 @@ Com isso, se atinge os conceitos de escalabilidade, segurança (através do Trae
 
 Todas as mudanças aqui mencionadas podem ser desenvolvidas e aplicadas via [**Terraform**](https://www.terraform.io/docs/index.html) + [**Ansible**](https://docs.ansible.com/ansible/latest/index.html) com o intuito de prover um maior controle da infraestrutura além de também possibilitar a integração de CI/CD neste processo, dando maior velocidade as tarefas!
 
-Uma última dica! Eu particularmente não uso dashboard padrão do Kubernetes e por isso não comentei até aqui, visto que isso não atrapalha ninguém... Mas se quiserem uma sugestão o [**Lens**](https://k8slens.dev/) está ai!
 <h1></h1>
 
 <p align="center">Integrado por Nathã Paulino</p>

@@ -40,8 +40,8 @@ spec:
     spec:
       containers:
       - name: frontend
+        image: ${REGISTRY_ADDRESS}/${REGISTRY_NAME}:${TAG}
         imagePullPolicy: Always
-        image: $REGISTRY_ADDRESS/$REGISTRY_NAME:$TAG
         ports:
         - containerPort: 80
 ---

@@ -9,7 +9,7 @@ spec:
     - host: frontend.cluster
       http:
         paths:
-          - path: /login
+          - path: /
             pathType: Prefix
             backend:
               service:

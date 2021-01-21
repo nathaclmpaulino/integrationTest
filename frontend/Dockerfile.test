@@ -16,10 +16,4 @@ ARG REACT_APP_BACKEND_WS
 
 ARG REACT_APP_BACKEND_URL
 
-RUN npm test
-
-FROM nginx:alpine
-
-COPY config/nginx.conf /etc/nginx/nginx.conf
-
-COPY --from=dependencies /usr/src/app/build/ /usr/share/nginx/html/
+RUN CI=true npm test

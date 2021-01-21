@@ -1,6 +1,7 @@
 #!/bin/bash
 
 function update(){
+  echo "Atualizando pacote apt"
   if ! (sudo apt-get update -y > /dev/null && sudo apt-get upgrade -y > /dev/null) then
     echo "Nao foi possivel realizar o update"
   fi;
@@ -42,10 +43,12 @@ function install_kubernetes(){
 }
 
 function run_minikube(){
+  echo "Iniciando o Minikube e instalando requisitos!"
   minikube start
   minikube addons enable storage-provisioner 
   minikube addons enable ingress
   minikube ip
+  echo "Minikube iniciado e addons adicionados!"
   return 0
 }
 
@@ -59,7 +62,7 @@ then
               docker: Instala o docker na máquina!
               k8s: Instala o minikube e o kubectl na máquina!
               run: Instala as dependências todas do projeto!
-              config: Roda o ambiente local do Minikube! Este comando deve ser rodado apenas depois de instalar o docker e o minikube!"
+              config: Roda o ambiente local do Minikube! Este comando deve ser rodado apenas depois de instalar o docker, o minikube!"
         echo "Este script instala os requisitos para rodar esse repositório! (Docker, Kubernetes, Minikube)"    
       ;;
     k8s)
