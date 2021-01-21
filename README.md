@@ -18,7 +18,7 @@ Este repositório contém uma automatização de ambiente, escrita em Shell Scri
 Este repositório roda este ambiente APENAS de forma local em um Minikube, na seção Em Produção é dito como incorporar esse código para um ambiente de produção com o intuito de preservar as melhores práticas!
 
 ***ShellScript***:  A escolha foi feita por se tratar uma linguaguem simples e presente em qualquer distribuição Linux. Os dois scripts bash presentes na pasta raíz do projeto são os responsáveis por integrar os serviços de forma automática e sem nenhum problema para o usuário. A seguir encontra-se a funcionalidade deles
-  1. ci-cd.sh: Este script é responsável por fazer a tarefa de CI/CD da aplicação como um todo, porém publica a imagem no meu próprio DockerHub!
+  1. ci-cd.sh: Este script é responsável por fazer a tarefa de CI/CD da aplicação como um todo! Trata-se de um script completo, porém com webhook manual (vocês terão de o script para fazer a integração acontecer)! O passo a passo de execução desse script consta na seção <a href=#rocket-iniciando-aplicação> Iniciando aplicação</a>
   2. requirements.sh: Este script instala todos os requisitos necessários para rodar essa aplicação de forma local! A única coisa que se pede, é que tenha git instalado na máquina para buscar este repositório! 
 
 ***Estruturação de Pastas***: A escolha por essa estrutura de pastas se deu principalmente pela escalabilidade do sistema! Embora são microsserviços distintos (frontend, backend e database), podendo ficar separados em repositórios diferentes, optou-se por manter os todos no mesmo repositório para facilitar a integração com o script de CI!
@@ -28,10 +28,10 @@ Ao substituir este script para uma ferramenta de CI (GitLab, Jenkins, CircleCI, 
 Para adicionar novos serviços a essa stack basta realizar os seguintes passos:
  1. Adicionar uma nova pasta que contém a estrutura do serviço no repositório. 
  2. Criar o Dockerfile necessário para rodar a aplicação sobre containers. 
- 3. Criar, realizar o build e o push da imagem para seu Registro de Imagens preferido,
- 4. Escrever as definições de Kubernetes do serviço, atentando-se para o local de busca da imagem.
+ 3. Criar dentro da sua ferramenta de armazenamento de imagens, um novo repositório para suas imagens.
+ 4. Escrever as definições de Kubernetes do serviço, deixe parametrizado como consta nos outros arquivos.
  5. Incorporar o novo serviço ao script de CI. 
- 6. Realizar o deploy utilizando o script de CI.
+ 6. Realizar o processo de teste, build e deploy utilizando o script de CI.
 
 ## :scroll: Decisões de Projeto
 
@@ -82,26 +82,56 @@ Neste esquema temos que:
   $ ./requirements.sh config
 
   # Adicione este IP juntamente ao seu arquivo /etc/hosts. Este comando vai ser necessário para 
-  # permitir o Nginx IngressController criar uma rota de acesso ao seu navegador. 
+  # permitir que o Nginx IngressController criar uma rota de acesso ao seu navegador. 
   # Estes dois comandos precisarão de privilégios de super usuário!
-  root# echo "<IP obtido da última linha> frontend.cluster"
-  root# echo "<IP obtido da última linha> backend.cluster"
+  root# echo "<IP obtido da última linha> frontend.cluster" >> /etc/hosts
+  root# echo "<IP obtido da última linha> backend.cluster" >> /etc/hosts
 
 ```
 Ao final desse processo, você terá um Minikube rodando local na sua máquina com o config do Kubernetes diretamente apontado para ele e também com os addons de storage e ingresses funcionando. 
 
-Estes dois levam um tempo para serem deployados, mas é de extrema importância que esperem que o script termine com sucesso!
+Estes dois levam um tempo para serem deployados, mas é de extrema importância que esperem que o script termine com sucesso! E que o seu arquivo /etc/hosts fique com uma cara parecida com essa descrita abaixo:
+
+![Imgur](https://i.imgur.com/dPtlvo4.png)
 
 ## :rocket: Iniciando aplicação
 ```bash
   # Execute as três etapas de CI!
+  
+  # Uso: ./ci-cd.sh pipeline SERVICE_NAME [USERNAME] [ACCESS_TOKEN] [REGISTRY_ADDRESS] [REGISTRY_NAME] [REACT_APP_BACKEND_WS] e [REACT_APP_BACKEND_URL]
+
   $ ./ci-cd.sh pipeline redis
 
-  $ ./ci-cd.sh pipeline backend
+  $ ./ci-cd.sh pipeline backend <USERNAME> <ACCESS_TOKEN> nathapaulino backend-chatapp  
 
-  $ ./ci-cd.sh pipeline frontend
+  $ ./ci-cd.sh pipeline frontend <USERNAME> <ACCESS_TOKEN> nathapaulino frontend ws://backend.cluster http://backend.cluster
+
+  # Caso queira testar somente aquele serviço (juntamente com os arquivos k8s), basta realizar o seguinte comando!
+  # Uso: ./ci-cd.sh test SERVICE_NAME [REGISTRY_ADDRESS] [REGISTRY_NAME] [REACT_APP_BACKEND_WS] e [REACT_APP_BACKEND_URL]
+
+  $ ./ci-cd.sh test redis
+
+  $ ./ci-cd.sh test backend <REGISTRY_ADDRESS> <REGISTRY_NAME>
+
+  $ ./ci-cd.sh test frontend <REGISTRY_ADDRESS> <REGISTRY_NAME> <REACT_APP_BACKEND_WS> <REACT_APP_BACKEND_URL>
 ```
- 
+Este script precisa de muitos parâmetros, pois ele foi construído para ser o mais universal possível, a ideia aqui era de prover um esquema de CI/CD, ainda sim que manual, funcionasse de forma que fosse possível outra pessoa qualquer utilizar, desde que a mesma esteja rodando sobre um Minikube! 
+
+Os exemplos mostrados acima são de como rodar este script com as minhas próprias configurações do DockerHub! Os conteúdos das variáveis USERNAME e ACCESS_TOKEN podem ser pedidas para o dono do repositório (ou encontrados no corpo do email) porque trata-se de uma informação de controle de acesso, e portanto, extremamente sensível!
+
+O conteúdo de REGISTRY_ADDRESS e REGISTRY_NAME se dão da seguinte forma, considerando a seguinte linha de um arquivo de Deployment.
+```bash
+    #...
+    spec:
+      containers:
+        name: frontend
+        image: ${REGISTRY_ADDRESS}/${REGISTRY_NAME}:${IMAGE_TAG}
+    #...
+```
+A variável denominada IMAGE_TAG será gerada de forma aleatória pelo script, assim não se tem problema em realizar tal procedimento! 
+
+O deploy do redis, por sua vez, usa a docker image pública do redis, não sendo necessário um repositório no registry de imagens do DockerHub.
+
 ## :no_entry: :computer: Ambiente local
 
 Ao final da execução do script anterior tem-se um ambiente funcional! Para acessar é só usar o endpoint `frontend.cluster/login`. Lembrando que ao escrever os IPs no /etc/hosts conforme feito na etapa de Instalação de requisitos, você permitiu a criação de endpoints específicos externos (LoadBalancers) para o mapeamento interno do cluster! 

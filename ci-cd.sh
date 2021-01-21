@@ -5,96 +5,172 @@
 # 
 # Caso queira saber como ele funciona, use o comando ./ci-cd.sh help
 
+# Parâmetros: <SERVICE_NAME> <REGISTRY_ADDRESS> <REGISTRY_NAME> <REACT_APP_BACKEND_URL> <REACT_APP_BACKEND_WS> <TAG>
 function test_service() {
-	if [[ $1 == 'frontend' ]];
-	then
-		if ! docker build --build-arg REACT_APP_BACKEND_WS=http://backend.cluster --build-arg REACT_APP_BACKEND_URL=http://backend.cluster -f $PWD/frontend/Dockerfile.test;
-		then
-			echo "Falha no teste do container do $1!"
-			return -3
-		elif ! kubectl apply -f $PWD/frontend/kubernetes/k8s-$1.yml --validate=true --dry-run=client || kubectl apply -f $PWD/frontend/kubernetes/k8s-$1-ingress.yml --validate=true --dry-run=client;
-		then
-			echo "Erro na validação dos arquivos de definição de K8s do $1!"
-			return -2
-		fi;
-	elif [[ $1 == 'backend' ]];
-	then
-		if ! kubectl apply -f $PWD/backend/kubernetes/k8s-$1.yml --validate=true --dry-run=client || kubectl apply -f $PWD/frontend/kubernetes/k8s-$1-ingress.yml --validate=true --dry-run=client || kubectl apply -f $PWD/frontend/kubernetesk8s-$1-config.yml --validate=true --dry-run=client;
-		then
-			echo "Erro na validação dos arquivos de definição de K8s do $1!"
-			return -2
-		fi;
-	elif [[ $1 == 'redis' ]];
-	then
-		if ! kubectl apply -f $PWD/database/redis/k8s-$1.yml --validate=true --dry-run=client ;
-		then
-			echo "Erro na validação dos arquivos de definição de K8s do $1!"
-			return -2
-		fi; 
-	else
-		echo "Erro na execução do script! Consulte ./ci-cd.sh help para mais informações!"
-		return -1
-	fi;
-	return 0
+  local SERVICE_NAME=$1
+  local REGISTRY_ADDRESS=$2
+  local REGISTRY_NAME=$3
+  local REACT_APP_BACKEND_URL=$4
+  local REACT_APP_BACKEND_WS=$5
+  local TAG=$6
+  case $SERVICE_NAME in
+    frontend)
+      if ! docker build --build-arg REACT_APP_BACKEND_WS=$REACT_APP_BACKEND_WS --build-arg REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL -f ./$SERVICE_NAME/Dockerfile.test ./$SERVICE_NAME;
+      then
+        echo "Falha no teste + container docker do $SERVICE_NAME!"
+        return 2
+      elif ! eval "kubectl apply --validate=true --dry-run -f - <<EOF 
+      $(cat ./$SERVICE_NAME/kubernetes/k8s-$SERVICE_NAME-ingress.yml)
+      ---
+      $(cat ./$SERVICE_NAME/kubernetes/k8s-$SERVICE_NAME.yml)  
+      EOF" 
+      then
+        echo "Falha nas definições de K8s!"
+        return 3
+      fi;
+      ;;
+    backend)
+      if ! eval "kubectl apply --validate=true --dry-run -f - <<EOF 
+      $(cat ./$SERVICE_NAME/kubernetes/k8s-$SERVICE_NAME-ingress.yml)
+      ---
+      $(cat ./$SERVICE_NAME/kubernetes/k8s-$SERVICE_NAME.yml)
+      ---
+      $(cat ./$SERVICE_NAME/kubernetes/k8s-$SERVICE_NAME-config.yml)  
+      EOF"
+      then
+        echo "Falha nas definições de K8s do $SERVICE_NAME!"
+        return 3
+      fi;
+      ;;
+    redis)
+      if ! eval "kubectl apply --validate=true --dry-run -f - <<EOF 
+      $(cat ./database/$SERVICE_NAME/k8s-$SERVICE_NAME.yml)
+      ---
+      EOF"
+      then
+        echo "Falha nas definições de K8s do $SERVICE_NAME!"
+        return 3
+      fi;
+      ;;
+    *)
+      echo "Serviço não existente! Consulte ./ci-cd.sh help para mais informações!"
+      return 1
+      ;;
+  esac
+  return 0
 }
 
 function deploy_service() {
-	if [[ $1 == 'frontend' ]];
-	then
-		kubectl apply -f $PWD/frontend/kubernetes/k8s-$1-ingress.yml
-		kubectl apply -f $PWD/frontend/kubernetes/k8s-$1.yml
-	elif [[ $1 == 'backend' ]];
-	then
-		kubectl apply -f $PWD/backend/kubernetes/k8s-$1-config.yml
-		kubectl apply -f $PWD/backend/kubernetes/k8s-$1-ingress.yml
-		kubectl apply -f $PWD/backend/kubernetes/k8s-$1.yml
-	elif [[ $1 == 'redis' ]];
-	then
-		kubectl apply -f $PWD/database/redis/k8s-$1.yml
-	else
-		echo "Erro na execução do script! Consulte ./ci-cd.sh help para mais informações!"
-		return -1
-	fi;
+  SERVICE_NAME=$1 
+  REGISTRY_ADDRESS=$2
+  REGISTRY_NAME=$3
+  TAG=$4
+  case $SERVICE_NAME in 
+    frontend)
+      eval "kubectl apply --validate=true --dry-run -f - <<EOF 
+      $(cat ./$SERVICE_NAME/kubernetes/k8s-$SERVICE_NAME-ingress.yml)
+      ---
+      $(cat ./$SERVICE_NAME/kubernetes/k8s-$SERVICE_NAME.yml)  
+      EOF"
+      ;;
+    backend)
+      eval "kubectl apply --validate=true --dry-run -f - <<EOF 
+      $(cat ./$SERVICE_NAME/kubernetes/k8s-$SERVICE_NAME-ingress.yml)
+      ---
+      $(cat ./$SERVICE_NAME/kubernetes/k8s-$SERVICE_NAME.yml)
+      ---
+      $(cat ./$SERVICE_NAME/kubernetes/k8s-$SERVICE_NAME-config.yml)  
+      EOF"
+      ;;
+    redis)
+      eval "kubectl apply --validate=true --dry-run -f - <<EOF 
+      $(cat ./database/$SERVICE_NAME/k8s-$SERVICE_NAME.yml)
+      ---
+      EOF"
+      ;;
+    *)
+      echo "Serviço não encontrado! Use ./ci-cd.sh help para mais informações!"
+      return 1
+      ;;
+  esac
 	return 0
 }         
 
+# Parâmetros: <USERNAME> <ACCESS_TOKEN>
+function login_dockerhub() {
+  local USERNAME=$1
+  local ACCESS_TOKEN=$2
+  if ! docker login -u $USERNAME -p $ACCESS_TOKEN
+    echo "Não foi possível logar no DockerHub! Confira suas credenciais de acesso!"
+    return 4
+  fi;  
+  return 0
+}
+
+function create_tag_image() {
+  TAG=head /dev/urandom | tc -dc 'a-z0-9'| fold -w 10 | head -n 1
+}
+
+# Parâmetros: <SERVICE_NAME> <USERNAME> <ACCESS_TOKEN> <REGISTRY_ADDRESS> <REGISTRY_NAME>
+# <REACT_APP_BACKEND_URL> <REACT_APP_BACKEND_WS> <TAG>
+
 function push_dockerhub() {
-	case $1 in 
+  local SERVICE_NAME=$1
+  local USERNAME=$2
+  local ACCESS_TOKEN=$3
+  local REGISTRY_ADDRESS=$4
+  local REGISTRY_NAME=$5
+  local REACT_APP_BACKEND_URL=$6
+  local REACT_APP_BACKEND_WS=$7
+  local TAG=$8
+  if ! login_dockerhub $USERNAME $PASSWORD
+  then 
+    return 4
+  fi;
+  case $SERVICE_NAME in 
 		frontend)
-			docker login --username nathapaulino $2
-			docker build -t frontend --build-arg REACT_APP_BACKEND_URL=http://backend.cluster REACT_APP_BACKEND_WS=http://backend.cluster $PWD/frontend/
-			docker tag frontend nathapaulino/frontend-chatapp
-			docker push nathapaulino/frontend-chatapp
+      docker build -t $TAG --build-arg REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL REACT_APP_BACKEND_WS=$REACT_APP_BACKEND_WS $PWD/$SERVICE_NAME/ ./$SERVICE_NAME/
+			docker tag $TAG $REGISTRY_ADDRESS/$REGISTRY_NAME:$TAG
+			docker push $REGISTRY_ADDRESS/$REGISTRY_NAME:$TAG
 			;;
 		backend)
-			docker login --username nathapaulino $2
-			docker build -t backend $PWD/backend/
-			docker tag backend nathapaulino/backend-chatapp
-			docker push nathapaulino/backend-chatapp
+			docker build -t $TAG ./$SERVICE_NAME/
+			docker tag $TAG $REGISTRY_ADDRESS/$REGISTRY_NAME:$TAG
+			docker push $REGISTRY_ADDRESS/$REGISTRY_NAME:$TAG
 			;;
 		*)
-			echo "Serviço não encontrado!"
-			return -1
+			echo "Serviço não encontrado! Use ./ci-cd.sh help para mais informações!"
+			return 1
 			;;
 	esac
 	return 0
 }
 
+# Parâmetros: <SERVICE_NAME> <USERNAME> <ACCESS_TOKEN> <REGISTRY_ADDRESS> <REGISTRY_NAME> 
+# <REACT_APP_BACKEND_URL> <REACT_APP_BACKEND_WS>
 function pipeline() {
-	case $1 in
+  local SERVICE_NAME=$1
+  local USERNAME=$2
+  local ACCESS_TOKEN=$3
+  local REGISTRY_ADDRESS=$4
+  local REGISTRY_NAME=$5
+  local REACT_APP_BACKEND_URL=$6
+  local REACT_APP_BACKEND_WS=$7
+  create_tag_image
+	case $SERVICE_NAME in
 		frontend)
-			test_service $1
-			push_dockerhub $1 $2
-			deploy_service $1
+			test_service $SERVICE_NAME $REGISTRY_ADDRESS $REGISTRY_NAME $REACT_APP_BACKEND_URL $REACT_APP_BACKEND_WS $TAG
+			push_dockerhub $SERVICE_NAME $USERNAME $ACCESS_TOKEN $REGISTRY_ADDRESS $REGISTRY_NAME $REACT_APP_BACKEND_URL $REACT_APP_BACKEND_WS $TAG
+			deploy_service $SERVICE_NAME $REGISTRY_ADDRESS $REGISTRY_NAME $TAG
 			;;
 		backend)
-			test_service $1
-			push_dockerhub $1 $2
-			deploy_service $1
+			test_service $SERVICE_NAME $REGISTRY_ADDRESS $REGISTRY_NAME $REACT_APP_BACKEND_URL $REACT_APP_BACKEND_WS $TAG
+			push_dockerhub $SERVICE_NAME $USERNAME $ACCESS_TOKEN $REGISTRY_ADDRESS $REGISTRY_NAME $REACT_APP_BACKEND_URL $REACT_APP_BACKEND_WS $TAG
+			deploy_service $SERVICE_NAME $REGISTRY_ADDRESS $REGISTRY_NAME $TAG
 			;;
 		redis)
-			test_service $1
-			deploy_service $1
+			test_service $SERVICE_NAME $REGISTRY_ADDRESS $REGISTRY_NAME $TAG
+			deploy_service $SERVICE_NAME $REGISTRY_ADDRESS $REGISTRY_NAME $TAG
 			;;
 		*)
 			echo "Serviço não encontrado!"
@@ -102,6 +178,7 @@ function pipeline() {
 	esac
 	return 0
 }
+
 # Script se inicia aqui!
 
 if [[ $# -eq 1 && $1 == 'help' ]]; 

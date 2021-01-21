@@ -41,7 +41,7 @@ spec:
       containers:
       - name: backend
         imagePullPolicy: Always
-        image: nathapaulino/backend-chatapp:latest
+        image: $REGISTRY_ADDRESS/$REGISTRY_NAME:$TAG
         ports:
         - containerPort: 8080
         envFrom:
