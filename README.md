@@ -108,8 +108,6 @@ Caso seja necessário, reinicie o Pod do CoreDNS para remover erro de ReadinessP
 
 ![Imgur](https://i.imgur.com/gfLTpdu.png)
 
-<//>
-
 Agora basta continuar com o processo de iniciando a aplicação para que você tenha acesso aos serviços que compõem o cluster!
 
 ## :rocket: Iniciando aplicação
@@ -150,9 +148,13 @@ A variável denominada TAG será gerada de forma aleatória pelo script, com iss
 
 O deploy do redis, por sua vez, usa a docker image pública do redis, não sendo necessário um repositório no registry de imagens do DockerHub.
 
+Ao final da execução, vocês terão um cluster com mais ou menos esse formato:
+
+![Imgur](https://i.imgur.com/PLeV9WO.png)
+
 ## :no_entry: :computer: Ambiente local
 
-Ao final da execução do script anterior tem-se um ambiente funcional! Para acessar é só usar o endpoint `frontend.cluster/login`. Lembrando que ao escrever os IPs no /etc/hosts conforme feito na etapa de Instalação de requisitos, você permitiu a criação de endpoints específicos externos (LoadBalancers) para o mapeamento interno do cluster! 
+Ao final da execução do script anterior tem-se um ambiente funcional! Para acessar é só usar o endpoint `frontend.cluster/`. Lembrando que ao escrever os IPs no /etc/hosts conforme feito na etapa de Instalação de requisitos, você permitiu a criação de endpoints específicos externos (LoadBalancers) para o mapeamento interno do cluster! 
 
 Conforme dito anteriormente, a comunicação entre o pod do backend e o pod do redis se dá internamente, por IP e porta do serviço! Assim cria-se uma camada a mais de proteção ao banco!
 
@@ -168,7 +170,9 @@ O desenho a seguir indica uma visão arquitetural da plataforma sobre essas circ
 
 ![Imgur](https://i.imgur.com/JTVvj98.png)
 
-Os passos a se levarem em conta são:
+Este seria uma visão geral do cluster, e como funcionaria o ambiente do mesmo em cloud! Os números indicam o caminho de dados de uma possível request ao ambiente! 
+
+Tecnologias e discussão alto nível das estrututras:
   1. A criação de estruturas primárias para deploy de um cluster (VPC, Route53, S3 Buckets);
   2. O uso de [**Kops**](https://github.com/kubernetes/kops) ou [**Kubeadm**](https://github.com/kubernetes/kubeadm) ou [**EKS**](https://aws.amazon.com/pt/eks/) para deploy de um novo cluster com o uso de [**Autoscaling Groups**](https://aws.amazon.com/pt/autoscaling/) e [**Spot Instances**](https://aws.amazon.com/pt/ec2/spot/);
   3. O uso de [**Helm**](https://helm.sh/) para deploy das estruturas importantes!
